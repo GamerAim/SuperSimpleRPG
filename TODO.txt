@@ -19,18 +19,15 @@ Create minimally viable game:
 
 
 Current ideas for tasks:
-	 2) Tile will likely be the best choice here.
-		*    Should the json/xml file be converted to something more C friendly
-		*  with a handy script, or just use the raw output? What would be simpler?
+	 2) A simple script should be written to bring the map data from json/xml from
+	    tiles to something C friendly to avoid having to write an editor.
 
 	 6) Have one large surface with prerendered elements for when the PC moves
 		*    It might be a good idea to put a to put all the tiles in order 
 		*  in an array, such as tiles[specific_tile], and it have all the info
 		*  for rendering in each element.
 
-	 8) I've heard nothing but agony on talk of text rendering.
-		*    Is there a simple way to handle text rendering w/o loading another
-		*  surface? Is SDL_tff viable?
+	 8) SDL_tff
 
 	 9) Preserve everything that needs preserving and switch over the battle stage.
 		*    Should we have a struct for the event loop and switch between them

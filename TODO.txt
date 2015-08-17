@@ -1,16 +1,49 @@
 Create minimally viable game:
-	One level
-	One Map
-	  Story:
-		Talk to king for quest
-		Get cool item
-		Fight boss
-		Return to King
-		End of Game
-	Make a simple scripted tool to take json to something more C friendly
-	Collision detection
-	Basic Rendering using a SDL surface
-	Only have an overworld view
-	Make chat box for the king talk
-	Make battle stage
-	
+	 0) Settle on a license and coding style
+	 1) One level
+	 2) One Map
+	 3) Story:
+		3.1) Talk to king for quest
+		3.2) Get cool item
+		3.3) Fight boss
+		3.4) Return to King
+		3.5) End of Game
+	 4) Make a simple scripted tool to take json to something more C friendly
+	 5) Collision detection
+	 6) Basic Rendering using a SDL surface
+	 7) Only have an overworld view
+	 8) Make chat box for the boss/king talk
+	 9) Make battle stage
+	10) Config files
+	11) Insert interesting idea in Current ideas for tasks under 10
+
+
+Current ideas for tasks:
+	 2) Tile will likely be the best choice here.
+		*    Should the json/xml file be converted to something more C friendly
+		*  with a handy script, or just use the raw output? What would be simpler?
+
+	 6) Have one large surface with prerendered elements for when the PC moves
+		*    It might be a good idea to put a to put all the tiles in order 
+		*  in an array, such as tiles[specific_tile], and it have all the info
+		*  for rendering in each element.
+
+	 8) I've heard nothing but agony on talk of text rendering.
+		*    Is there a simple way to handle text rendering w/o loading another
+		*  surface? Is SDL_tff viable?
+
+	 9) Preserve everything that needs preserving and switch over the battle stage.
+		*    Should we have a struct for the event loop and switch between them
+		*  for different states? Would that add/reduce code complexity, and would
+		*  it be of any benefit?
+
+	10) Config files are important to map.
+		*    Would it be a bad idea to have some simple C friendly configs for
+		*  things like font size?
+
+	11) How much hard coding can we avoid w/o using more code?
+		*    Should dialog be kept in text files, or just in source?
+
+
+
+

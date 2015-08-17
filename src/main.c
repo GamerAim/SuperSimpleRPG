@@ -31,11 +31,13 @@ int main(int argc, char **argv)
 	/*Prime libs*/
 	init_libs();
 
-	/*gen globals*/
+	/*Prime globals*/
 	init_globals();
 
-	/*This would be a handy place to put asset loading*/
+	/*Display logos*/
 	TitleScreen();
+
+	
 
 	/*Clean up!*/
 	IMG_Quit();
@@ -94,7 +96,7 @@ void init_globals(void)
 	if (gWindow == NULL)
 		die("Failed to create title screen: %s\n", SDL_GetError());
 
-	/*It's double buffered*/
+	/*Get the window's double buffered surface*/
 	gSurface = SDL_GetWindowSurface(gWindow);
 }
 

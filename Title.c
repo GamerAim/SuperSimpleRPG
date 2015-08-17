@@ -1,10 +1,6 @@
-void loadAndDisplay(char *fileName, SDL_Window *window)
+void loadAndDisplay(char *fileName, SDL_Window *window, SDL_Surface *wSurface)
 {
 	SDL_Surface *avatar;
-	SDL_Surface *wSurface;
-
-	/*It's double buffered*/
-	wSurface = SDL_GetWindowSurface(window);
 
 	/*Now for the Avatar*/
 	avatar = IMG_Load(fileName);
@@ -13,12 +9,12 @@ void loadAndDisplay(char *fileName, SDL_Window *window)
 
 	/*Clean up*/
 	SDL_FreeSurface(avatar);
-	SDL_FreeSurface(wSurface);
 }
 
 void TitleScreen(void)
 {
 	SDL_Window *title;
+	SDL_Surface *surface;
 
 	/*Window creation*/
 	title = SDL_CreateWindow(
@@ -31,15 +27,18 @@ void TitleScreen(void)
 	if (title == NULL)
 		die("Failed to create title screen: %s\n", SDL_GetError());
 
+	/*It's double buffered*/
+	surface = SDL_GetWindowSurface(title);
 
 	/*Display Sebbu Avatar*/
-	loadAndDisplay("Sebbu_w_name.png", title);
+	loadAndDisplay("Sebbu_w_name.png", title, surface);
 	SDL_Delay(3000);
 
 	/*Display Brandc Avatar*/
-	loadAndDisplay("Brandc.png", title);
+	loadAndDisplay("Brandc.png", title, surface);
 	SDL_Delay(3000);
 
 	/*Clean up!*/
+	SDL_FreeSurface(surface);
 	SDL_DestroyWindow(title);
 }

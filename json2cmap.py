@@ -11,6 +11,13 @@ def convert(jsonmap, out):
 	# First line
 	out.write( bytes("w%d,h%d,tw%d,th%d\n" % (width, height, tileWidth, tileHeight), 'UTF-8') )
 
+	# Tilesets
+	out.write( bytes("t%d\n" % len(tileSets), 'UTF-8') )
+	for tileSet in tileSets:
+		out.write( bytes("w%d,h%d,tw%d,th%d,g%d,n'%s'\n" % (tileSet['imagewidth'],      \
+			   tileSet['imageheight'], tileSet['tilewidth'], tileSet['tileheight'], \
+			   tileSet['firstgid'], tileSet['image']), 'UTF-8') )
+
 	# Amount of layers
 	amount = 0
 	for layer in layers:
@@ -18,7 +25,7 @@ def convert(jsonmap, out):
 			amount += 1
 	out.write(bytes("l%d\n" % amount, 'UTF-8'))
 
-	# Tile sets
+	# Layers
 	for layer in layers:
 		if not (layer['type'] == "tilelayer"):
 			continue
@@ -42,9 +49,9 @@ def convert(jsonmap, out):
 		data = group['objects']
 		out.write(bytes("%d\n" % len(data), 'UTF-8'))
 		for gr in data:
-			out.write(bytes("x%d,y%d,w%d,h%d,n'%s',t%d\n" % \
+			out.write(bytes("x%d,y%d,w%d,h%d,v%d,n'%s'\n" % \
 			  (gr['x'], gr['y'], gr['width'], gr['height'], \
-			  gr['name'], int(gr['type'])), 'UTF-8'))
+			  int(gr['type']), gr['name']), 'UTF-8'))
 	out.close()
 
 

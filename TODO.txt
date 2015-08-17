@@ -1,0 +1,16 @@
+Create minimally viable game:
+	One level
+	One Map
+	  Story:
+		Talk to king for quest
+		Get cool item
+		Fight boss
+		Return to King
+		End of Game
+	Make a simple scripted tool to take json to something more C friendly
+	Collision detection
+	Basic Rendering using a SDL surface
+	Only have an overworld view
+	Make chat box for the king talk
+	Make battle stage
+	

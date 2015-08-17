@@ -1,0 +1,4 @@
+No source code will be accepted unless it uses the license specified in "License.txt"
+
+Please use several commits on larger blocks of code.
+One must make their best effort to follow the Linux kernel C coding style.

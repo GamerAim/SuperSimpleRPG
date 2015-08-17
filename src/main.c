@@ -7,11 +7,19 @@
 #include "SDL2/SDL_image.h"
 
 /*Global variables*/
-SDL_Window  *gScreen;
+SDL_Window  *gWindow;
 SDL_Surface *gSurface;
 
+int gWidth;
+int gHeight;
+
+/*Global defs*/
+#define WHITE 0xFFFFFFFF
+#define BLACK 0x00000000
+
 /*Prototypes*/
-void init(void);
+void init_libs(void);
+void init_globals(void);
 void die(char *reason, ...);
 
 /*Internal libs*/
@@ -21,7 +29,10 @@ void die(char *reason, ...);
 int main(int argc, char **argv)
 {
 	/*Prime libs*/
-	init();
+	init_libs();
+
+	/*gen globals*/
+	init_globals();
 
 	/*This would be a handy place to put asset loading*/
 	TitleScreen();
@@ -51,7 +62,7 @@ void die(char *reason, ...)
 }
 
 /*initializations go here*/
-void init(void)
+void init_libs(void)
 {
 	/*Init for SDL.h*/
 	if (SDL_Init(SDL_INIT_EVERYTHING))
@@ -65,6 +76,27 @@ void init(void)
 	atexit(IMG_Quit);
 }
 
+void init_globals(void)
+{
+	/*Current desired window dimensions*/
+	gWidth  = 460;
+	gHeight = 460;
+
+	/*Window creation*/
+	gWindow = SDL_CreateWindow(
+		"Title Screen",		 /*windows title*/
+		SDL_WINDOWPOS_UNDEFINED, /*X*/
+		SDL_WINDOWPOS_UNDEFINED, /*Y*/
+		gWidth,			 /*Width*/
+		gHeight,		 /*Height*/
+		SDL_WINDOW_SHOWN |
+		  SDL_WINDOW_RESIZABLE);
+	if (gWindow == NULL)
+		die("Failed to create title screen: %s\n", SDL_GetError());
+
+	/*It's double buffered*/
+	gSurface = SDL_GetWindowSurface(gWindow);
+}
 
 
 

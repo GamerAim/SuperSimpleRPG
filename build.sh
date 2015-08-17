@@ -1,5 +1,5 @@
 #!/bin/bash
 
-gcc -lSDL2 -lSDL2_image main.c -o game
+gcc -lSDL2 -lSDL2_image -Os -g main.c -o game
 
 exit 0

@@ -13,6 +13,7 @@ void loadAndDisplay(char *fileName, SDL_Window *window)
 
 	/*Clean up*/
 	SDL_FreeSurface(avatar);
+	SDL_FreeSurface(wSurface);
 }
 
 void TitleScreen(void)

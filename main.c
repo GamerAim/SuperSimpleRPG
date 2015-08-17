@@ -27,6 +27,7 @@ int main(int argc, char **argv)
 	TitleScreen();
 
 	/*Clean up!*/
+	IMG_Quit();
 	SDL_Quit();
 	return 0;
 }

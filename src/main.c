@@ -24,6 +24,7 @@ void die(char *reason, ...);
 
 /*Internal libs*/
 #include "Title.c"
+#include "LoadMap.c"
 
 
 int main(int argc, char **argv)
@@ -36,8 +37,6 @@ int main(int argc, char **argv)
 
 	/*Display logos*/
 	TitleScreen();
-
-	
 
 	/*Clean up!*/
 	IMG_Quit();

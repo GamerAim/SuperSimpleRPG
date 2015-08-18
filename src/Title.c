@@ -37,11 +37,3 @@ void TitleScreen(void)
 	loadAndDisplay("assets/HJ.png");
 	SDL_Delay(3000);
 }
-
-
-
-
-
-
-
-

@@ -39,10 +39,6 @@ typedef struct {
 	int width;
 	int height;
 
-	/*Height and width in pixels of for each cell*/
-	int tileWidth;
-	int tileHeight;
-
 	/* layer[y][x] where:
 	 *	0 <= y < height
 	 *	0 <= x < width
@@ -147,12 +143,14 @@ typedef struct {
 #define MAXNUMLEN 32
 #define MAXSTRINGLEN 128
 
+int dataLen;
+
 int getNum(char *data, int *offset)
 {
 	int i, ret;
 
 	ret = 0;
-	for (i = (*offset); i < MAXNUMLEN; i++) {
+	for (i = (*offset); i < MAXNUMLEN && i < dataLen; i++) {
 		if (data[i] < '0' || data[i] > '9')
 			break;
 		else {
@@ -162,6 +160,8 @@ int getNum(char *data, int *offset)
 	}
 
 	if (data[i] != ',' || data[i] != '\n')
+		return -1;
+	if ( i == (dataLen-1) && data[i] != '\n')
 		return -1;
 
 	*offset = i;
@@ -173,9 +173,13 @@ char *getString(char *data, int *offset)
 	char *ret;
 	int i, len;
 
-	for (i = (*offset); i < MAXSTRINGLEN; i++)
+	for (i = (*offset); i < MAXSTRINGLEN && i < dataLen; i++)
 		if (data[i] == '\'')
 			break;
+
+	if ( i == (dataLen-1) && data[i] != '\n')
+		return NULL;
+
 	len = i - (*offset);
 	if (len <= 0)
 		return NULL;
@@ -192,7 +196,7 @@ char *getString(char *data, int *offset)
 
 map_t *LoadMap(char *name)
 {
-	int i;
+	int i, j;
 	int tmp;
 	char *map;
 	char *num;
@@ -237,6 +241,10 @@ map_t *LoadMap(char *name)
 	if (SDL_RWclose(file) < 0)
 		die("Failed to close file because %s\n", SDL_GetError());
 
+	/* So the functions that common use the map buffer won't overrun
+	 * on the event of a file corruption
+	 */
+	dataLen = mapLen;
 
 	/*Initialize variables, to shut gcc up*/
 	num    = NULL;
@@ -340,34 +348,78 @@ map_t *LoadMap(char *name)
 			goto tileseterr;
 		offset += 2;
 	}
-/*
- * Next line: "l%d"
- * 	l = amount of layers
- * 
- * Following lines are equal to the number of layers:
- * 	Formated as "w%d,h%d,d%d,%d,%d,%d,...":
- * 		w = width in cells
- * 		h = height in cells
- * 		d = gid values equal to w*h, seperated by a comma as, but not
- * 		    ending or starting with one. Example:
- * 			%d,%d,%d,%d
-*/
+
+
 	/*Now to fetch the map layers*/
 	offset++;
 	ret->layersLen = getNum(map, &offset);
-//	if (getNum)
-//		goto tileseterr;
-//	offset++;
+	if (ret->layersLen < 0)
+		goto tileseterr;
+	offset++;
 
-//	ret->layers = calloc(sizeof(mapLayer_t), ret->layersLen);
-//	if (ret->layers == NULL)
-//		goto tileseterr;
-/*
+	ret->layers = calloc(sizeof(mapLayer_t), ret->layersLen);
+	if (ret->layers == NULL)
+		goto tileseterr;
+
+	/*Iterate over each layer line and load into memory*/
 	for (i = 0; i < ret->layersLen; i++) {
-		
-	}
-*/
+		offset++;
+		tmp = getNum(map, &offset);
+		if (tmp < 0)
+			goto layerserr;
+		ret->layers[i].width = tmp;
+		offset += 2;
 
+		tmp = getNum(map, &offset);
+		if (tmp < 0)
+			goto layerserr;
+		ret->layers[i].height = tmp;
+		offset += 2;
+
+		int **dPtr;
+		dPtr = calloc(sizeof(int**), ret->layers[i].height);
+		if (dPtr == NULL)
+			goto layerserr;
+		for (j = 0; j < ret->layers[i].height; j++) {
+			dPtr[j] = calloc(sizeof(int*), ret->layers[i].width);
+			if (dPtr[j] == NULL)
+				goto layerserr;
+		}
+		ret->layers[i].layer = dPtr;
+
+		int k;
+		for (j = 0; j < ret->layers[i].height; j++) {
+			for (k = 0; k < ret->layers[i].width; k++) {
+				tmp = getNum(map, &offset);
+				if (tmp < 0)
+					goto layerserr;
+				offset++;
+
+				ret->layers[i].layer[j][k] = tmp;
+			}
+		}
+	}
+/*
+ * The following sets of lines are equal to the number of objects:
+ * 	An integer for the number of lines following it
+ *	 	Formated as x%d,y%d,w%d,h%d,v%d,n'%s':
+ * 			x = x offset to upper left corner
+ * 			y = y offset to upper left corner
+ * 			w = width of object
+ * 			h = height of object
+ * 			v = integer value for object for game purposes
+ * 			n = name of object
+ */
+	offset++;
+	tmp = getNum(map, &offset);
+	if (tmp < 0)
+		goto layerserr;
+	ret->objectGroupsLen = tmp;
+	offset++;
+
+//	for (i = 0; i < ret->objectsLen; i++) {
+//		
+//	}
 
 	/*Clean up and return*/
 	free(map);
@@ -376,6 +428,18 @@ map_t *LoadMap(char *name)
 
 
 	/*error section of code*/
+	layerserr:
+		if (ret->layers != NULL) {
+			if (ret->layersLen == 0)
+				free(ret->layers);
+			else {
+				for (i = 0; i < ret->layers[i].height; i++)
+					for (j = 0; ret->layers[i].layer[j] != NULL; j++)
+						free(ret->layers[i].layer[j]);
+
+				free(ret->layers);
+			}
+		}
 	tileseterr:
 		if (ret->tileSetsLen < 0)
 			goto headererr;
@@ -393,3 +457,4 @@ map_t *LoadMap(char *name)
 }
 
 #undef MAXNUMLEN
+#undef MAXSTRINGLEN

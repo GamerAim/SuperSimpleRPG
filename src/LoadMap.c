@@ -562,5 +562,48 @@ map_t *LoadMap(char *name)
 		return NULL;
 }
 
+void FreeMap(map_t *map)
+{
+	int i, j;
+
+	if (map->objectGroups != NULL) {
+		for (i = 0; i < map->objectGroupsLen; i++) {
+			if (map->objectGroups[i].objects != NULL)
+				for (j = 0; j < map->objectGroups[i].objectsLen; j++)
+					if (map->objectGroups[i].objects[j].name != NULL)
+						free(map->objectGroups[i].objects[j].name);
+				free(map->objectGroups[i].objects);
+		}
+		free(map->objectGroups);
+	}
+
+	if (map->layers != NULL) {
+		if (map->layersLen == 0)
+			free(map->layers);
+		else {
+			for (i = 0; i < map->layers[i].height; i++)
+				for (j = 0; map->layers[i].layer[j] != NULL; j++)
+					free(map->layers[i].layer[j]);
+			free(map->layers);
+		}
+	}
+
+	if (map->tiles != NULL)
+		free(map->tiles);
+
+	if (map->tileSetsLen < 0)
+		goto end;
+
+	for (i = 0; i < map->tileSetsLen; i++) {
+		if (map->tileSets[i].name != NULL)
+			free(map->tileSets[i].name);
+		if (map->tileSets[i].image != NULL)
+			SDL_FreeSurface(map->tileSets[i].image);
+	}
+
+	end:
+		free(map);
+}
+
 #undef MAXNUMLEN
 #undef MAXSTRINGLEN

@@ -52,8 +52,8 @@ typedef struct {
 	int y;
 
 	/*height and width*/
-	int w;
-	int h;
+	int width;
+	int height;
 
 	/*object name and value*/
 	char *name;
@@ -196,14 +196,15 @@ char *getString(char *data, int *offset)
 
 map_t *LoadMap(char *name)
 {
-	int i, j;
 	int tmp;
 	char *map;
 	char *num;
 	map_t *ret;
 	int offset;
 	int64_t mapLen;
+	int i, j, x, y;
 	SDL_RWops *file;
+	int width, height;
 
 	/*Open file and load into memory*/
 	file = SDL_RWFromFile(name, "rb");
@@ -350,6 +351,58 @@ map_t *LoadMap(char *name)
 	}
 
 
+	/*Now to make the tile array*/
+	int total = 0;
+	for (i = 0; i < ret->tileSetsLen; i++) {
+		width  = ret->tileSets[i].imageWidth;
+		height = ret->tileSets[i].imageHeight;
+		width  = width  % ret->tileSets[i].tileWidth;
+		height = height % ret->tileSets[i].tileHeight;
+
+		if ((ret->tileSets[i].imageWidth % ret->tileSets[i].tileWidth) != 0)
+			if (ret->tileSets[i].tileWidth < ret->tileSets[i].imageWidth)
+				width++;
+		if ((ret->tileSets[i].imageHeight % ret->tileSets[i].tileHeight) != 0)
+			if (ret->tileSets[i].tileHeight < ret->tileSets[i].imageHeight)
+				height++;
+
+		total += width * height;
+	}
+
+	assert(total > 0);
+	ret->tilesLen = total;
+	ret->tiles = calloc(sizeof(tile_t), total);
+	if (ret->tiles == NULL)
+		goto tileseterr;
+
+	for (i = 0; i < ret->tileSetsLen; i++) {
+		width  = ret->tileSets[i].imageWidth;
+		height = ret->tileSets[i].imageHeight;
+		width  = width  % ret->tileSets[i].tileWidth;
+		height = height % ret->tileSets[i].tileHeight;
+
+		if ((ret->tileSets[i].imageWidth % ret->tileSets[i].tileWidth) != 0)
+			if (ret->tileSets[i].tileWidth < ret->tileSets[i].imageWidth)
+				width++;
+		if ((ret->tileSets[i].imageHeight % ret->tileSets[i].tileHeight) != 0)
+			if (ret->tileSets[i].tileHeight < ret->tileSets[i].imageHeight)
+				height++;
+
+		int current = 0;
+		for (y = 0; y < height; y++)
+			for (x = 0; x < width; x++) {
+				ret->tiles[current].x      = width  * ret->tileSets[i].tileWidth;
+				ret->tiles[current].y      = height * ret->tileSets[i].tileHeight;
+
+				ret->tiles[current].width  = ret->tileSets[i].tileWidth;
+				ret->tiles[current].height = ret->tileSets[i].tileHeight;
+
+				ret->tiles[current].tileSet = i;
+				ret->tiles[current].image   = ret->tileSets[i].image;
+			}
+	}
+
+
 	/*Now to fetch the map layers*/
 	offset++;
 	ret->layersLen = getNum(map, &offset);
@@ -399,27 +452,66 @@ map_t *LoadMap(char *name)
 			}
 		}
 	}
-/*
- * The following sets of lines are equal to the number of objects:
- * 	An integer for the number of lines following it
- *	 	Formated as x%d,y%d,w%d,h%d,v%d,n'%s':
- * 			x = x offset to upper left corner
- * 			y = y offset to upper left corner
- * 			w = width of object
- * 			h = height of object
- * 			v = integer value for object for game purposes
- * 			n = name of object
- */
+
+	/*Now to put all objects into memory*/
 	offset++;
 	tmp = getNum(map, &offset);
 	if (tmp < 0)
-		goto layerserr;
+		goto objectserr;
 	ret->objectGroupsLen = tmp;
 	offset++;
 
-//	for (i = 0; i < ret->objectsLen; i++) {
-//		
-//	}
+	ret->objectGroups = calloc(sizeof(objectGroup_t), ret->objectGroupsLen);
+	if (ret->objectGroups == NULL)
+		goto objectserr;
+
+	/*Now Iterate over each set of objects*/
+	for (i = 0; i < ret->objectGroupsLen; i++) {
+		offset++;
+		tmp = getNum(map, &offset);
+		if (tmp < 0)
+			goto objectserr;
+		ret->objectGroups[i].objectsLen = tmp;
+		offset++;
+
+		for (j = 0; j < ret->objectGroups[i].objectsLen; j++) {
+			offset++;
+			tmp = getNum(map, &offset);
+			if (tmp < 0)
+				goto objectserr;
+			ret->objectGroups[i].objects[j].x = tmp;
+			offset += 2;
+
+			tmp = getNum(map, &offset);
+			if (tmp < 0)
+				goto objectserr;
+			ret->objectGroups[i].objects[j].y = tmp;
+			offset += 2;
+
+			tmp = getNum(map, &offset);
+			if (tmp < 0)
+				goto objectserr;
+			ret->objectGroups[i].objects[j].width = tmp;
+			offset += 2;
+
+			tmp = getNum(map, &offset);
+			if (tmp < 0)
+				goto objectserr;
+			ret->objectGroups[i].objects[j].height = tmp;
+			offset += 2;
+
+			tmp = getNum(map, &offset);
+			if (tmp < 0)
+				goto objectserr;
+			ret->objectGroups[i].objects[j].value = tmp;
+			offset += 3;
+
+			ret->objectGroups[i].objects[j].name = getString(map, &offset);
+			if (ret->objectGroups[i].objects[j].name == NULL)
+				goto objectserr;
+			offset++;
+		}
+	}
 
 	/*Clean up and return*/
 	free(map);
@@ -428,6 +520,18 @@ map_t *LoadMap(char *name)
 
 
 	/*error section of code*/
+	objectserr:
+		if (ret->objectGroups != NULL) {
+			for (i = 0; i < ret->objectGroupsLen; i++) {
+				if (ret->objectGroups[i].objects != NULL)
+					for (j = 0; j < ret->objectGroups[i].objectsLen; j++)
+						if (ret->objectGroups[i].objects[j].name != NULL)
+							free(ret->objectGroups[i].objects[j].name);
+					free(ret->objectGroups[i].objects);
+			}
+			free(ret->objectGroups);
+		}
+
 	layerserr:
 		if (ret->layers != NULL) {
 			if (ret->layersLen == 0)
@@ -441,6 +545,8 @@ map_t *LoadMap(char *name)
 			}
 		}
 	tileseterr:
+		if (ret->tiles != NULL)
+			free(ret->tiles);
 		if (ret->tileSetsLen < 0)
 			goto headererr;
 		for (i = 0; i < ret->tileSetsLen; i++) {

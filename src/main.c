@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <assert.h>
 
 /*Official Third party libs*/
 #include "SDL2/SDL.h"
